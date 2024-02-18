@@ -19,11 +19,10 @@ namespace UnitTests
 
             // Act
             StandardOut($"Acting");
-            HttpResponseMessage response = await GetHttpResponse(url);
+            HttpResponseMessage response = await GetHttpRequest(url);
 
             // Assert
             StandardOut($"Asserting");
-            response.EnsureSuccessStatusCode();
             string responseContent = await response.Content.ReadAsStringAsync();
         }
     }

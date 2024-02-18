@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using Xunit.Abstractions;
 
 namespace UnitTests
@@ -10,9 +13,9 @@ namespace UnitTests
     {
         protected readonly ITestOutputHelper _testOutputHelper;
 
-        private readonly HttpClient? _httpClient;
         private readonly string _className;
         private string _methodName;
+        private HttpClient? _httpClient;
 
         public UnitTests(ITestOutputHelper testOutputHelper, IPolicyEvaluator? policyEvaluator = null)
         {
@@ -66,13 +69,58 @@ namespace UnitTests
             _testOutputHelper.WriteLine(writeMessage);
         }
 
-        protected async Task<HttpResponseMessage> GetHttpResponse(string url)
+        protected void SetHttpBearerToken(string token)
         {
             if (_httpClient == null)
                 throw new HttpRequestException("Http Client is null");
 
-            _testOutputHelper.WriteLine($"{_className}.GetHttpResponse - Sending HttpGet Request");
-            return await _httpClient.GetAsync(url);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            _testOutputHelper.WriteLine($"{_className}.SetHttpBearerToken - Set Http Client Bearer Token");
+        }
+
+        protected async Task<HttpResponseMessage> GetHttpRequest(string url)
+        {
+            if (_httpClient == null)
+                throw new HttpRequestException("Http Client is null");
+
+            _testOutputHelper.WriteLine($"{_className}.GetHttpRequest - Sending HttpGet Request");
+            HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
+            HttpResponseMessage httpResponse = await _httpClient.SendAsync(httpRequest);
+            httpResponse.EnsureSuccessStatusCode();
+
+            return httpResponse;
+        }
+
+        protected async Task<HttpResponseMessage> PostFormUrlEncodedHttpRequest(string url, Dictionary<string, string> content)
+        {
+            if (_httpClient == null)
+                throw new HttpRequestException("Http Client is null");
+
+            _testOutputHelper.WriteLine($"{_className}.PostFormUrlEncodedHttpRequest - Sending HttpPost Request");
+            HttpRequestMessage httpRequest = new(HttpMethod.Post, url)
+            {
+                Content = new FormUrlEncodedContent(content)
+            };
+            HttpResponseMessage httpResponse = await _httpClient.SendAsync(httpRequest);
+            httpResponse.EnsureSuccessStatusCode();
+
+            return httpResponse;
+        }
+
+        protected async Task<HttpResponseMessage> PostJsonHttpRequest(string url, Object content)
+        {
+            if (_httpClient == null)
+                throw new HttpRequestException("Http Client is null");
+
+            _testOutputHelper.WriteLine($"{_className}.PostJsonHttpRequest - Sending HttpPost Request");
+            HttpRequestMessage httpRequest = new(HttpMethod.Post, url)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(content), Encoding.UTF8, "application/json")
+            };
+            HttpResponseMessage httpResponse = await _httpClient.SendAsync(httpRequest);
+            httpResponse.EnsureSuccessStatusCode();
+
+            return httpResponse;
         }
 
         public void Dispose()
