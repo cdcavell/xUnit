@@ -9,8 +9,8 @@ namespace UnitTests
     public abstract class UnitTests : IDisposable
     {
         protected readonly ITestOutputHelper _testOutputHelper;
-        protected readonly HttpClient? _httpClient;
 
+        private readonly HttpClient? _httpClient;
         private readonly string _className;
         private string _methodName;
 
@@ -64,6 +64,15 @@ namespace UnitTests
             writeMessage += message.Trim();
 
             _testOutputHelper.WriteLine(writeMessage);
+        }
+
+        protected async Task<HttpResponseMessage> GetHttpResponse(string url)
+        {
+            if (_httpClient == null)
+                throw new HttpRequestException("Http Client is null");
+
+            _testOutputHelper.WriteLine($"{_className}.GetHttpResponse - Sending HttpGet Request");
+            return await _httpClient.GetAsync(url);
         }
 
         public void Dispose()

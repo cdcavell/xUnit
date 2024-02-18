@@ -19,8 +19,7 @@ namespace UnitTests
 
             // Act
             StandardOut($"Acting");
-            HttpResponseMessage response = (_httpClient != null) 
-                ? await _httpClient.GetAsync(url) : throw new HttpRequestException();
+            HttpResponseMessage response = await GetHttpResponse(url);
 
             // Assert
             StandardOut($"Asserting");
