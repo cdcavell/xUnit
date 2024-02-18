@@ -9,20 +9,24 @@ namespace UnitTests
     public abstract class UnitTests : IDisposable
     {
         protected readonly ITestOutputHelper _testOutputHelper;
-        protected readonly HttpClient _httpClient;
+        protected readonly HttpClient? _httpClient;
 
         private readonly string _className;
         private string _methodName;
 
-        public UnitTests(ITestOutputHelper testOutputHelper, IPolicyEvaluator policyEvaluator)
+        public UnitTests(ITestOutputHelper testOutputHelper, IPolicyEvaluator? policyEvaluator = null)
         {
             _testOutputHelper = testOutputHelper;
             _className = this.GetType().Name.Trim();
             _methodName = string.Empty;
 
-            UnitTestWebApplicationFactory<Program> factory = new(policyEvaluator);
-            _httpClient = factory.CreateClient();
-            _testOutputHelper.WriteLine($"{_className}.Constuctor - Created Http Client");
+            if (policyEvaluator != null)
+            {
+                UnitTestWebApplicationFactory<Program> factory = new(policyEvaluator);
+                _httpClient = factory.CreateClient();
+                _httpClient.Timeout = TimeSpan.FromMinutes(10);
+                _testOutputHelper.WriteLine($"{_className}.Constuctor - Created Http Client");
+            }
         }
         
         private void SetMethodName()
@@ -64,8 +68,11 @@ namespace UnitTests
 
         public void Dispose()
         {
-            _httpClient.Dispose();
-            _testOutputHelper.WriteLine($"{_className}.Dispose - Disposed Http Client");
+            if (_httpClient != null)
+            {
+                _httpClient.Dispose();
+                _testOutputHelper.WriteLine($"{_className}.Dispose - Disposed Http Client");
+            }
         }
     }
 }

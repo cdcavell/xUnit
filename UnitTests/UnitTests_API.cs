@@ -19,12 +19,13 @@ namespace UnitTests
 
             // Act
             StandardOut($"Acting");
-            var response = await _httpClient.GetAsync(url);
+            HttpResponseMessage response = (_httpClient != null) 
+                ? await _httpClient.GetAsync(url) : throw new HttpRequestException();
 
             // Assert
             StandardOut($"Asserting");
             response.EnsureSuccessStatusCode();
-            var responseContent = await response.Content.ReadAsStringAsync();
+            string responseContent = await response.Content.ReadAsStringAsync();
         }
     }
 }
